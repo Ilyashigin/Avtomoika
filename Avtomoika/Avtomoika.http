@@ -1,0 +1,6 @@
+@Avtomoika_HostAddress = http://localhost:5020
+
+GET {{Avtomoika_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
