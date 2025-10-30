@@ -90,6 +90,19 @@ app.MapPut("/api/services", async (Service serviceData, ApplicationContext db) =
     await db.SaveChangesAsync();
     return Results.Json(service);
 });
+app.MapPut("/api/order", async (Order orderData, ApplicationContext db) =>
+{
+    var order = await db.Orders.FirstOrDefaultAsync(u => u.Id == orderData.Id);
+    if (order == null) return Results.NotFound(new { message = "Пользователь не найден" });
+    order.CustomerId = orderData.CustomerId;
+    order.CarId = orderData.CarId;
+    order.ServiceId = orderData.ServiceId;
+    order.OrderDate = orderData.OrderDate;
+    order.TotalPrice = orderData.TotalPrice;
+    order.Status = orderData.Status;
+    await db.SaveChangesAsync();
+    return Results.Json(order);
+});
 
 //DELETE
 app.MapDelete("/api/clients/{id:int}", async (int id, ApplicationContext db) =>
@@ -113,6 +126,14 @@ app.MapDelete("/api/services/{id:int}", async (int id, ApplicationContext db) =>
     Service? service = await db.Services.FirstOrDefaultAsync(u => u.Id == id);
     if (service == null) return Results.NotFound(new { message = "Пользователь не найден" });
     db.Services.Remove(service);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+app.MapDelete("/api/order/{id:int}", async (int id, ApplicationContext db) =>
+{
+    Order? order = await db.Orders.FirstOrDefaultAsync(u => u.Id == id);
+    if (order == null) return Results.NotFound(new { message = "Пользователь не найден" });
+    db.Orders.Remove(order);
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
