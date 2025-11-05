@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Avtomoika.models;
+namespace Avtomoika.Domain.Entities;
+
 
 public class Car
 {

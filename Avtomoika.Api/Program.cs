@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using Avtomoika;
-using Avtomoika.models;
+using Avtomoika.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

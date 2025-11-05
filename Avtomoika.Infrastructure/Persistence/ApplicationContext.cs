@@ -1,7 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Avtomoika.models;
+﻿
 
-namespace Avtomoika
+
+using Avtomoika.Domain.Entities;
+using Avtomoika.Aplication.Orders.Dto;
+using Microsoft.EntityFrameworkCore;
+
+namespace Avtomoika.Infrastructure.Persistence
 {
     public class ApplicationContext : DbContext
     {

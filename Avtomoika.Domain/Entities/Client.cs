@@ -1,4 +1,4 @@
-﻿namespace Avtomoika.models;
+﻿namespace Avtomoika.Domain.Entities;
 
 public class Client
 {
