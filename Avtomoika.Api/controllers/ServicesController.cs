@@ -1,80 +1,80 @@
-﻿using Avtomoika.Infrastructure.Persistence;
+﻿using Avtomoika.Application.Interfaces;
 using Avtomoika.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-
-namespace Avtomoika.Controllers
+namespace Avtomoika.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ServicesController : ControllerBase
+    public class ServiceController : ControllerBase
     {
-        private readonly ApplicationContext _db;
+        private readonly IRepository<Service> _serviceRepository;
 
-        public ServicesController(ApplicationContext db)
+        public ServiceController(IRepository<Service> serviceRepository)
         {
-            _db = db;
+            _serviceRepository = serviceRepository;
         }
-
         
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Service>>> GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var services = await _db.Services.AsNoTracking().ToListAsync();
+            var services = await _serviceRepository.GetAllAsync();
             return Ok(services);
         }
-
         
         [HttpGet("{id}")]
-        public async Task<ActionResult<Service>> GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var service = await _db.Services.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+            var service = await _serviceRepository.GetByIdAsync(id);
             if (service == null)
-                return NotFound(new { message = "Услуга не найдена" });
+                return NotFound();
 
             return Ok(service);
         }
-
         
         [HttpPost]
-        public async Task<ActionResult<Service>> Create(Service service)
+        public async Task<IActionResult> Create(Service service)
         {
-            _db.Services.Add(service);
-            await _db.SaveChangesAsync();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            await _serviceRepository.AddAsync(service);
+            await _serviceRepository.SaveChangesAsync();
+
             return CreatedAtAction(nameof(GetById), new { id = service.Id }, service);
         }
-
         
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Service updated)
+        public async Task<IActionResult> Update(int id, Service updatedService)
         {
-            if (id != updated.Id)
-                return BadRequest(new { message = "Id в URL и теле запроса не совпадают" });
+            if (id != updatedService.Id)
+                return BadRequest("ID услуги не совпадает.");
 
-            var service = await _db.Services.FindAsync(id);
-            if (service == null)
-                return NotFound(new { message = "Услуга не найдена" });
+            var existingService = await _serviceRepository.GetByIdAsync(id);
+            if (existingService == null)
+                return NotFound();
 
-            service.Name = updated.Name;
-            service.Description = updated.Description;
-            service.Price = updated.Price;
+            existingService.Name = updatedService.Name;
+            existingService.Description = updatedService.Description;
+            existingService.Price = updatedService.Price;
 
-            await _db.SaveChangesAsync();
+            await _serviceRepository.UpdateAsync(existingService);
+            await _serviceRepository.SaveChangesAsync();
+
             return NoContent();
         }
-
         
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var service = await _db.Services.FindAsync(id);
+            var service = await _serviceRepository.GetByIdAsync(id);
             if (service == null)
-                return NotFound(new { message = "Услуга не найдена" });
+            {
+                return NotFound();
+            }
 
-            _db.Services.Remove(service);
-            await _db.SaveChangesAsync();
-
+            await _serviceRepository.DeleteAsync(id);
+            await _serviceRepository.SaveChangesAsync();
             return NoContent();
         }
     }

@@ -1,6 +1,6 @@
 ﻿{
   "profiles": {
-    "Avtomoika": {
+    "Development": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

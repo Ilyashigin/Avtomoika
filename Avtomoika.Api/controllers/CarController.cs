@@ -1,91 +1,53 @@
-﻿using Avtomoika.Domain.Entities;
-using Avtomoika.Infrastructure.Persistence;
+﻿using Avtomoika.Application.Interfaces;
+using Avtomoika.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-
-namespace Avtomoika.Controllers
+namespace Avtomoika.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class CarsController : ControllerBase
+    public class CarController : ControllerBase
     {
-        private readonly ApplicationContext _db;
+        private readonly IRepository<Car> _carRepository;
 
-        public CarsController(ApplicationContext db)
+        public CarController(IRepository<Car> carRepository)
         {
-            _db = db;
+            _carRepository = carRepository;
         }
-        
+
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Car>>> GetAll()
-        {
-            var cars = await _db.Cars
-                .AsNoTracking()
-                .Include(c => c.Client)
-                .ToListAsync();
+        public async Task<IActionResult> GetAll() =>
+            Ok(await _carRepository.GetAllAsync());
 
-            return Ok(cars);
-        }
-        
         [HttpGet("{id}")]
-        public async Task<ActionResult<Car>> GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var car = await _db.Cars
-                .AsNoTracking()
-                .Include(c => c.Client)
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (car == null)
-                return NotFound(new { message = "Машина не найдена" });
-
-            return Ok(car);
+            var car = await _carRepository.GetByIdAsync(id);
+            return car == null ? NotFound() : Ok(car);
         }
 
-        
         [HttpPost]
-        public async Task<ActionResult<Car>> Create(Car car)
+        public async Task<IActionResult> Create(Car car)
         {
-            var clientExists = await _db.Clients.AnyAsync(c => c.Id == car.ClientId);
-            if (!clientExists)
-                return BadRequest(new { message = $"Клиент с Id={car.ClientId} не найден" });
-
-            _db.Cars.Add(car);
-            await _db.SaveChangesAsync();
-
+            await _carRepository.AddAsync(car);
+            await _carRepository.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = car.Id }, car);
         }
 
-        
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Car updated)
+        public async Task<IActionResult> Update(int id, Car car)
         {
-            if (id != updated.Id)
-                return BadRequest(new { message = "Id в URL и теле запроса не совпадают" });
-
-            var car = await _db.Cars.FindAsync(id);
-            if (car == null)
-                return NotFound(new { message = "Машина не найдена" });
-
-            car.Marka = updated.Marka;
-            car.Model = updated.Model;
-            car.Number = updated.Number;
-            car.ClientId = updated.ClientId;
-
-            await _db.SaveChangesAsync();
+            if (id != car.Id) return BadRequest();
+            await _carRepository.UpdateAsync(car);
+            await _carRepository.SaveChangesAsync();
             return NoContent();
         }
-        
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var car = await _db.Cars.FindAsync(id);
-            if (car == null)
-                return NotFound(new { message = "Машина не найдена" });
-
-            _db.Cars.Remove(car);
-            await _db.SaveChangesAsync();
-
+            await _carRepository.DeleteAsync(id);
+            await _carRepository.SaveChangesAsync();
             return NoContent();
         }
     }

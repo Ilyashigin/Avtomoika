@@ -1,111 +1,113 @@
-﻿using Avtomoika.Aplication.Orders.Dto;
-using Avtomoika.Infrastructure.Persistence;
+﻿using Avtomoika.Application.Interfaces;
 using Avtomoika.Domain.Entities;
+using Avtomoika.Api.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-
-namespace Avtomoika.Controllers
+namespace Avtomoika.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class OrdersController : ControllerBase
+    public class OrderController : ControllerBase
     {
-        private readonly ApplicationContext _db;
+        private readonly IRepository<Order> _orderRepository;
+        private readonly IRepository<Service> _serviceRepository;
 
-        public OrdersController(ApplicationContext db)
+        public OrderController(IRepository<Order> orderRepository, IRepository<Service> serviceRepository)
         {
-            _db = db;
+            _orderRepository = orderRepository;
+            _serviceRepository = serviceRepository;
         }
-        
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetAll()
-        {
-            var orders = await _db.Orders
-                .AsNoTracking()
-                .Include(o => o.Client)
-                .Include(o => o.Car)
-                .Include(o => o.Services)
-                .ToListAsync();
 
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var orders = await _orderRepository.GetAllAsync();
             return Ok(orders);
         }
-        
+
         [HttpGet("{id}")]
-        public async Task<ActionResult<Order>> GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var order = await _db.Orders
-                .AsNoTracking()
-                .Include(o => o.Client)
-                .Include(o => o.Car)
-                .Include(o => o.Services)
-                .FirstOrDefaultAsync(o => o.Id == id);
-
-            if (order == null)
-                return NotFound(new { message = "Заказ не найден" });
-
+            var order = await _orderRepository.GetByIdAsync(id);
+            if (order == null) return NotFound();
             return Ok(order);
         }
-        
-        [HttpPost]
-        public async Task<ActionResult<Order>> Create(OrderCreateDto dto)
-        {
-            var services = await _db.Services
-                .Where(s => dto.ServiceIds.Contains(s.Id))
-                .ToListAsync();
 
-            if (services.Count != dto.ServiceIds.Count)
-                return BadRequest(new { message = "Некоторые услуги не найдены" });
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
+        {
+            if (dto.ServiceIds == null || dto.ServiceIds.Count == 0)
+                return BadRequest("Необходимо указать хотя бы одну услугу.");
+
+            var services = new List<Service>();
+            decimal total = 0;
+
+            foreach (var id in dto.ServiceIds)
+            {
+                var service = await _serviceRepository.GetByIdAsync(id);
+                if (service == null)
+                    return BadRequest($"Услуга с ID {id} не найдена.");
+
+                services.Add(service);
+                total += service.Price;
+            }
 
             var order = new Order
             {
-                ClientId = dto.CustomerId,
+                ClientId = dto.ClientId,
                 CarId = dto.CarId,
                 Services = services,
+                TotalPrice = total,
                 OrderDate = dto.OrderDate,
-                TotalPrice = services.Sum(s => (decimal)s.Price),
                 Status = dto.Status
             };
 
-            _db.Orders.Add(order);
-            await _db.SaveChangesAsync();
+            await _orderRepository.AddAsync(order);
+            await _orderRepository.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
         }
 
-
-        
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Order updated)
+        public async Task<IActionResult> Update(int id, [FromBody] CreateOrderDto dto)
         {
-            if (id != updated.Id)
-                return BadRequest(new { message = "Id в URL и теле запроса не совпадают" });
+            var order = await _orderRepository.GetByIdAsync(id);
+            if (order == null) return NotFound();
 
-            var order = await _db.Orders.FindAsync(id);
-            if (order == null)
-                return NotFound(new { message = "Заказ не найден" });
+            var services = new List<Service>();
+            decimal total = 0;
 
-            order.ClientId = updated.ClientId;
-            order.CarId = updated.CarId;
-            order.Services = updated.Services;
-            order.OrderDate = updated.OrderDate;
-            order.TotalPrice = updated.TotalPrice;
-            order.Status = updated.Status;
+            foreach (var sid in dto.ServiceIds)
+            {
+                var service = await _serviceRepository.GetByIdAsync(sid);
+                if (service == null)
+                    return BadRequest($"Услуга с ID {sid} не найдена.");
 
-            await _db.SaveChangesAsync();
-            return NoContent();
+                services.Add(service);
+                total += service.Price;
+            }
+
+            order.ClientId = dto.ClientId;
+            order.CarId = dto.CarId;
+            order.Services = services;
+            order.TotalPrice = total;
+            order.OrderDate = dto.OrderDate;
+            order.Status = dto.Status;
+
+            await _orderRepository.UpdateAsync(order);
+            await _orderRepository.SaveChangesAsync();
+
+            return Ok(order);
         }
-        
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var order = await _db.Orders.FindAsync(id);
-            if (order == null)
-                return NotFound(new { message = "Заказ не найден" });
+            var order = await _orderRepository.GetByIdAsync(id);
+            if (order == null) return NotFound();
 
-            _db.Orders.Remove(order);
-            await _db.SaveChangesAsync();
-
+            await _orderRepository.DeleteAsync(id);
+            await _orderRepository.SaveChangesAsync();
             return NoContent();
         }
     }

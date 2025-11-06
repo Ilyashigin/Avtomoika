@@ -1,64 +1,47 @@
-﻿
-
-
-using Avtomoika.Domain.Entities;
-using Avtomoika.Aplication.Orders.Dto;
+﻿using Avtomoika.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Avtomoika.Infrastructure.Persistence
 {
     public class ApplicationContext : DbContext
     {
-        public DbSet<Client> Clients { get; set; } = null!;
-        public DbSet<Car> Cars { get; set; } = null!;
-        public DbSet<Service> Services { get; set; } = null!;
-        public DbSet<Order> Orders { get; set; } = null!;
+        public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options) { }
 
-        public ApplicationContext(DbContextOptions<ApplicationContext> options)
-            : base(options)
-        {
-            //Database.EnsureCreated();
-        }
+        public DbSet<Client> Clients => Set<Client>();
+        public DbSet<Car> Cars => Set<Car>();
+        public DbSet<Order> Orders => Set<Order>();
+        public DbSet<Service> Services => Set<Service>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // === Client -> Car ===
-            modelBuilder.Entity<Car>()
-                .HasOne(c => c.Client)
-                .WithMany(cl => cl.Car)
+            
+            modelBuilder.Entity<Client>()
+                .HasMany(c => c.Car)
+                .WithOne(c => c.Client)
                 .HasForeignKey(c => c.ClientId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // === Client -> Order ===
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.Client)
-                .WithMany(cl => cl.Order)
+            
+            modelBuilder.Entity<Client>()
+                .HasMany(c => c.Order)
+                .WithOne(o => o.Client)
                 .HasForeignKey(o => o.ClientId)
                 .OnDelete(DeleteBehavior.NoAction);
-
-            // === Car -> Order ===
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.Car)
-                .WithMany(c => c.Order)
+            
+            modelBuilder.Entity<Car>()
+                .HasMany(c => c.Order)
+                .WithOne(o => o.Car)
                 .HasForeignKey(o => o.CarId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // === Order -> Service (многие-ко-многим) ===
+            
             modelBuilder.Entity<Order>()
                 .HasMany(o => o.Services)
                 .WithMany(s => s.Orders)
                 .UsingEntity(j => j.ToTable("OrderServices"));
-
             
             modelBuilder.Entity<Order>()
                 .Property(o => o.TotalPrice)
-                .HasColumnType("decimal(18,2)");
-
-            modelBuilder.Entity<Service>()
-                .Property(s => s.Price)
-                .HasColumnType("decimal(18,2)");
+                .HasPrecision(18, 2);
         }
     }
 }

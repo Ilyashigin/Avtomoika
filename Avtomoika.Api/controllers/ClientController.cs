@@ -1,83 +1,53 @@
-﻿using Avtomoika.Infrastructure.Persistence;
+﻿using Avtomoika.Application.Interfaces;
 using Avtomoika.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-
-namespace Avtomoika.Controllers
+namespace Avtomoika.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ClientsController : ControllerBase
+    public class ClientController : ControllerBase
     {
-        private readonly ApplicationContext _db;
+        private readonly IRepository<Client> _clientRepository;
 
-        public ClientsController(ApplicationContext db)
+        public ClientController(IRepository<Client> clientRepository)
         {
-            _db = db;
+            _clientRepository = clientRepository;
         }
 
-        
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Client>>> GetAll()
-        {
-            var clients = await _db.Clients
-                .Include(c => c.Car)
-                .Include(c => c.Order)
-                .ToListAsync();
+        public async Task<IActionResult> GetAll() =>
+            Ok(await _clientRepository.GetAllAsync());
 
-            return Ok(clients);
-        }
-
-        
         [HttpGet("{id}")]
-        public async Task<ActionResult<Client>> GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var client = await _db.Clients
-                .Include(c => c.Car)
-                .Include(c => c.Order)
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (client == null)
-                return NotFound();
-
-            return Ok(client);
+            var client = await _clientRepository.GetByIdAsync(id);
+            return client == null ? NotFound() : Ok(client);
         }
 
-        
         [HttpPost]
-        public async Task<ActionResult<Client>> Create(Client client)
+        public async Task<IActionResult> Create(Client client)
         {
-            _db.Clients.Add(client);
-            await _db.SaveChangesAsync();
-
+            await _clientRepository.AddAsync(client);
+            await _clientRepository.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = client.Id }, client);
         }
 
-        
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, Client client)
         {
-            if (id != client.Id)
-                return BadRequest();
-
-            _db.Entry(client).State = EntityState.Modified;
-            await _db.SaveChangesAsync();
-
+            if (id != client.Id) return BadRequest();
+            await _clientRepository.UpdateAsync(client);
+            await _clientRepository.SaveChangesAsync();
             return NoContent();
         }
 
-        
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var client = await _db.Clients.FindAsync(id);
-            if (client == null)
-                return NotFound();
-
-            _db.Clients.Remove(client);
-            await _db.SaveChangesAsync();
-
+            await _clientRepository.DeleteAsync(id);
+            await _clientRepository.SaveChangesAsync();
             return NoContent();
         }
     }
