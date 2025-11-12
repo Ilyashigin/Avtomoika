@@ -22,7 +22,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="controllers\" />
+      <_ContentIncludedByDefault Remove="Avtomoika.Application\obj\Avtomoika.Application.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="Avtomoika.Application\obj\project.assets.json" />
+      <_ContentIncludedByDefault Remove="Avtomoika.Domain\obj\Avtomoika.Domain.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="Avtomoika.Domain\obj\project.assets.json" />
     </ItemGroup>
 
 </Project>

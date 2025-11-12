@@ -1,4 +1,4 @@
-﻿namespace Avtomoika.models;
+﻿namespace Avtomoika.Domain.Entities;
 
 public class Client
 {
@@ -6,6 +6,7 @@ public class Client
     public string? Name { get; set; }
     public string? Number { get; set; }
     public string? Email { get; set; }
+    
     public List<Car>? Car { get; set; } = new();
     public List<Order>? Order { get; set; } = new();
 }

@@ -1,4 +1,4 @@
-﻿namespace Avtomoika.models;
+﻿namespace Avtomoika.Domain.Entities;
 
 public class Service
 {
@@ -6,5 +6,5 @@ public class Service
     public string Name { get; set; }
     public string Description { get; set; }
     public float Price { get; set; }
-    public List<Order>? Order { get; set; } = new();
+    public List<Order>? Orders { get; set; } = new();
 }
