@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avtomoika.Domain", "Avtomoi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avtomoika.Infrastructure", "Avtomoika.Infrastructure\Avtomoika.Infrastructure.csproj", "{A35B8C43-76E5-4FC8-8F15-525B524AF8FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avtomoika.Tests", "Avtomoika.Tests\Avtomoika.Tests.csproj", "{CF691B9C-9ECB-49BD-A245-93FBF360B6FF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,5 +33,9 @@ Global
 		{A35B8C43-76E5-4FC8-8F15-525B524AF8FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A35B8C43-76E5-4FC8-8F15-525B524AF8FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A35B8C43-76E5-4FC8-8F15-525B524AF8FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF691B9C-9ECB-49BD-A245-93FBF360B6FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF691B9C-9ECB-49BD-A245-93FBF360B6FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF691B9C-9ECB-49BD-A245-93FBF360B6FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF691B9C-9ECB-49BD-A245-93FBF360B6FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
